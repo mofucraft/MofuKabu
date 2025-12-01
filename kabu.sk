@@ -1,0 +1,217 @@
+options:
+	tag: &f[<##00ff7f>Kabu&cβ&f] &f
+
+#system ^^
+on Skript start:
+	wait 10 seconds
+	broadcast "{@tag}カブシステムのテストメッセージを送信しています。"
+	wait 20 seconds
+	if {day} is 1 or 16:
+		if {kabu_changed_day} is not {day}:
+			clear {kabu::*}
+			set {kabu_changed_day} to {day}
+			set {_kabu_price1} to a random integer between 1 and 10
+			
+			if {_kabu_price1} is 1 or 2:
+				if {_kabu_price1} is 1:
+					set {_kabu_price2} to a random integer between 80 and 100
+				else:
+					set {_kabu_price2} to a random integer between 140 and 180
+			else:
+				set {_kabu_price2} to a random integer between 100 and 140
+			set {_kabu_price3} to a random integer between 1 and 9
+			set {kabu_price} to {_kabu_price2} - {_kabu_price3}
+			broadcast "{@tag}新カブ価 %{kabu_price}% MOFU"
+
+	else:
+		if {kabu_changed_day} is not {day}:
+			set {kabu_changed_day} to {day}
+			set {_next_kabu_chance} to a random integer between 0 and 50
+			if {_next_kabu_chance} is less than or equal to 20:
+				set {_next_kabu_price} to a random integer between 0 and 10
+			else if {_next_kabu_chance} is less than or equal to 45:
+				set {_next_kabu_price} to a random integer between 10 and 25
+			else:
+				set {_next_kabu_price} to a random integer between 25 and 40
+			set {_plus} to a random integer between 0 and 1
+			if {_plus} is 1:
+				set {_next_kabu_price} to {_next_kabu_price} * 1
+			else if {_plus} is 0:
+				set {_next_kabu_price} to {_next_kabu_price} * -1
+			set {next_kabu_price} to {_next_kabu_price} * {kabu_price} / 100
+			add {next_kabu_price} to {kabu_price}
+			if {kabu_price} is smaller than 0:
+				set {kabu_price} to 334
+				set {next_kabu_price} to 334
+			broadcast "{@tag}新カブ価 %{kabu_price}% MOFU ( 増減:%{next_kabu_price}% )"
+		
+
+#command ^^
+command /kabu <text=""> [<text="">]:
+	permission: mofucraft.member.kabu
+	trigger:
+		set {_num} to arg 2 parsed as integer
+		set {_sum} to {_num} * {kabu_price}
+
+
+		if arg 1 is "":
+			message "------- {@tag}-------"
+			message "/kabu price : &a本日のカブ価"
+			message "/kabu own : &a所持しているカブの確認"
+			message "/kabu buy 数字 : &aカブを購入"
+			message "/kabu sell 数字 : &aカブを売却"
+			message "/kabu check : &a残り時間を確認"
+			message "もっと詳しく : mofucraft.net/kabu"
+			
+		if arg 1 is "price":
+			message "{@tag}本日のカブ価は%{kabu_price}% MOFUです"
+			
+		if arg 1 is "own":
+			if {kabu::%player's uuid%} is not set:
+				set {kabu::%player's uuid%} to 0
+			message "{@tag}現在%{kabu::%player's uuid%}%カブ持っています！"
+		
+		if arg 1 is "top":
+			set {_high} to 0
+			loop {kabu::*}:
+				set {_list::%loop-index%} to loop-value
+			loop 5 times:
+				loop {_list::*}:
+					loop-value-2 > {_high}
+					set {_high} to loop-value-2
+					set {_highplayer} to loop-index
+				message "{@tag}%loop-number%位 %{_highplayer}% : %{_high}%カブ"
+				set {_high} to 0
+				delete {_list::%{_highplayer}%}
+		
+		if arg 1 is "check":
+			if arg 2 is "":
+				if 16 - {day} is greater than or equal to 1 :
+					message "{@tag}あと%16 - {day}%日でカブがダメになります！"
+				else:
+					if {month} is 2:
+						message "{@tag}あと%29 - {day}%日でカブがダメになります！"
+						stop trigger
+					if {month} is 1 or 3 or 5 or 7 or 8 or 10 or 12:
+						message "{@tag}あと%32 - {day}%日でカブがダメになります！"
+					else:
+						message "{@tag}あと%31 - {day}%日でカブがダメになります！"
+			else:
+				if arg 2 is text:
+					message "{@tag}%arg 2%は%{kabu::%{uuid::%arg 2%}%}%カブ持っています"
+					
+		if {_num} is greater than 0:
+			if arg 1 is "buy":
+				#if {_num} is divisible by 100:
+				if mod({_num}, 100) = 0:
+					if player's balance is greater than or equal to {_sum}:
+						add {_num} to {kabu::%player's uuid%}
+						remove {_sum} from player's balance
+						message "{@tag}%{_num}%カブ購入しました！"
+						message "{@tag}合計%{_sum}% MOFU使いました"
+					else:
+						message "{@tag}お金が足りません！"
+				else:
+					message "{@tag}100カブ単位で購入できます"
+
+			if arg 1 is "sell":
+				#if {_num} is divisible by 100:
+				if mod({_num}, 100) = 0:
+					if {kabu::%player's uuid%} is greater than or equal to {_num}:
+						remove {_num} from {kabu::%player's uuid%}
+						add {_sum} to player's balance
+						message "{@tag}%{_num}%カブ売却しました"
+						message "{@tag}合計%{_sum}% MOFU入手しました！"
+					else:
+						message "{@tag}カブが足りません！"
+				else:
+					message "{@tag}100カブ単位で売却できます"
+					
+			if arg 1 is "reload":
+				player has permission "mofucraft.staff":
+					execute player command "/skript reload kabu"
+				else:
+					message "ああん？"
+			
+			if arg 1 is "set":
+				player has permission "mofucraft.staff":
+					if arg 2 is "":
+						message "おおん？"
+					else:
+						set {kabu_price} to {_num}
+				else:
+					message "ああん？"
+					
+			if arg 1 is "set-zougen":
+				player has permission "mofucraft.staff":
+					if arg 2 is "":
+						message "おおん？"
+					else:
+						set {next_kabu_price} to {_num}
+				else:
+					message "ああん？"
+		
+		else if arg 1 is "buy" or "sell":
+			message "{@tag}その数値は使えません！"
+
+command /editkabu <text> <text> <text>:
+	usage: /editkabu add|remove player amount
+	permission: mofucraft.staff
+	trigger:
+		set {_num} to arg 3 parsed as integer
+		if arg 1 is "add":
+			add {_num} to {kabu::%{uuid::%arg 2%}%}
+			message "done"
+		if arg 1 is "remove":
+			remove {_num} from {kabu::%{uuid::%arg 2%}%}
+			message "done"
+
+command /reset-kabu:
+	permission: mofucraft.staff
+	trigger:
+		if {day} is 1 or 16:
+			if {kabu_changed_day} is not {day}:
+				clear {kabu::*}
+				set {kabu_changed_day} to {day}
+				set {_kabu_price1} to a random integer between 1 and 10
+				
+				if {_kabu_price1} is 1 or 2:
+					if {_kabu_price1} is 1:
+						set {_kabu_price2} to a random integer between 80 and 100
+					else:
+						set {_kabu_price2} to a random integer between 140 and 180
+				else:
+					set {_kabu_price2} to a random integer between 100 and 140
+				set {_kabu_price3} to a random integer between 1 and 9
+				set {kabu_price} to {_kabu_price2} - {_kabu_price3}
+				broadcast "{@tag}新カブ価 %{kabu_price}% MOFU"
+
+		else:
+			if {kabu_changed_day} is not {day}:
+				set {kabu_changed_day} to {day}
+				set {_next_kabu_chance} to a random integer between 0 and 50
+				if {_next_kabu_chance} is less than or equal to 20:
+					set {_next_kabu_price} to a random integer between 0 and 10
+				else if {_next_kabu_chance} is less than or equal to 45:
+					set {_next_kabu_price} to a random integer between 10 and 25
+				else:
+					set {_next_kabu_price} to a random integer between 25 and 40
+				set {_plus} to a random integer between 0 and 1
+				if {_plus} is 1:
+					set {_next_kabu_price} to {_next_kabu_price} * 1
+				else if {_plus} is 0:
+					set {_next_kabu_price} to {_next_kabu_price} * -1
+				set {next_kabu_price} to {_next_kabu_price} * {kabu_price} / 100
+				add {next_kabu_price} to {kabu_price}
+				if {kabu_price} is smaller than 0:
+					set {kabu_price} to 334
+					set {next_kabu_price} to 334
+				broadcast "{@tag}新カブ価 %{kabu_price}% MOFU ( 増減:%{next_kabu_price}% )"
+
+on join:
+	if {kabu::%player's uuid%} is greater than 0:
+		wait 3 seconds
+		if {day} is 1 or 16:
+			message "{@tag}おかえりなさい！ 現在のカブ価は%{kabu_price}% MOFUです。"
+		else:
+			message "{@tag}おかえりなさい！ 現在のカブ価は%{kabu_price}% MOFUです。( 昨日との差: %{next_kabu_price}% )"

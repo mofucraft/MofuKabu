@@ -1,12 +1,32 @@
 name: Kabu
 version: ${project.version}
 main: com.yiorno.kabu.Kabu
-api-version: 1.16
+api-version: '1.21'
 prefix: Kabu
 load: STARTUP
 authors: [yossy_zip]
-description: A stock plugin, which combies AnimalCrossing with real one.
-website: https://yiorno.com/plugins/the-kabu
+description: A stock plugin, which combines AnimalCrossing with real one.
+website: https://mofucraft.net/kabu
+depend: [Vault]
+
 commands:
   kabu:
-    description: カブ！
+    description: カブの売買や情報確認
+    usage: /kabu [price|own|buy|sell|check|top|set|set-zougen|reload] [args]
+    permission: mofucraft.member.kabu
+  editkabu:
+    description: プレイヤーのカブを編集（管理者用）
+    usage: /editkabu <add|remove> <player> <amount>
+    permission: mofucraft.staff
+  reset-kabu:
+    description: カブ価をリセット（管理者用）
+    usage: /reset-kabu
+    permission: mofucraft.staff
+
+permissions:
+  mofucraft.member.kabu:
+    description: カブの基本コマンドを使用
+    default: true
+  mofucraft.staff:
+    description: 管理者コマンドを使用
+    default: op

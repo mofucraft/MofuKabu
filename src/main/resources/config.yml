@@ -1,0 +1,26 @@
+# Kabuプラグイン設定
+
+# メッセージのプレフィックス (HEXカラーコード対応)
+prefix: "&f[<##00ff7f>Kabu&cβ&f] &f"
+
+# MySQL接続設定
+mysql:
+  host: "localhost"
+  port: 3306
+  database: "minecraft"
+  username: "root"
+  password: "password"
+  # 接続プール設定
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout: 30000
+
+# 価格チェックの頻度（分単位）- 毎日何分ごとに価格を更新するか
+price-check-interval: 60
+
+# 日付チェックの頻度（分単位）- 何分ごとに日付が変わったかチェックするか
+date-check-interval: 30
+
+# デバッグモード - ログに詳細情報を出力
+debug: false
